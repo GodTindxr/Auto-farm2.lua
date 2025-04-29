@@ -237,7 +237,7 @@ spawn(function()
     end
 end)
 
--- 🧠 ระบบล่า Easter Sakamote แบบ Hop
+-- 🎯 ระบบล่า Easter Sakamote แบบ Hop
 spawn(function()
     while task.wait(1) do
         if autoBossHopEnabled then
@@ -280,3 +280,4 @@ spawn(function()
         end
     end
 end)
+
