@@ -35,10 +35,13 @@ local maps = {
 local function saveConfig()
     if not writefile then return end
     local data = {
-        selectedMap = selectedMap,
-        targetType = targetType,
-        targetPriority = targetPriority
-    }
+    selectedMap = selectedMap,
+    targetType = targetType,
+    targetPriority = targetPriority,
+    autofarmEnabled = autofarmEnabled,
+    autoBossHopEnabled = autoBossHopEnabled
+}
+
     local json = HttpService:JSONEncode(data)
     writefile(configFileName, json)
 end
@@ -51,9 +54,16 @@ local function loadConfig()
             selectedMap = data.selectedMap or selectedMap
             targetType = data.targetType or targetType
             targetPriority = data.targetPriority or targetPriority
+            autofarmEnabled = data.autofarmEnabled or false
+            autoBossHopEnabled = data.autoBossHopEnabled or false
+
+            -- อัปเดตสถานะปุ่มให้ตรงกับค่าที่โหลด
+            autofarmToggle.Text = "เริ่ม Auto Farm: " .. (autofarmEnabled and "ON" or "OFF")
+            bossHopToggle.Text = "🎯 AutoHop Boss: " .. (autoBossHopEnabled and "ON" or "OFF")
         end
     end
 end
+
 
 local gui = Instance.new("ScreenGui")
 gui.Name = "GodTindxrHubLite"
