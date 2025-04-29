@@ -1,6 +1,3 @@
--- ✅ GodTindxrHubLite FULL Script
--- รวม GUI, AutoFarm, AutoHop, Save/Load ครบหมด พร้อมใช้งาน 100%
-
 local player = game.Players.LocalPlayer
 local guiParent = player:FindFirstChild("PlayerGui") or game:GetService("CoreGui")
 
@@ -19,11 +16,10 @@ local autofarmEnabled = false
 local selectedMap = nil
 local targetType = "All"
 local targetPriority = "Highest"
-
 local autoBossHopEnabled = false
+
 local PlaceId = game.PlaceId
 local TeleportService = game:GetService("TeleportService")
-
 local remote = game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Server")
 local HttpService = game:GetService("HttpService")
 local userId = player.UserId
@@ -52,14 +48,13 @@ local function loadConfig()
         local json = readfile(configFileName)
         local data = HttpService:JSONDecode(json)
         if data then
-            selectedMap = data.selectedMap
-            targetType = data.targetType
-            targetPriority = data.targetPriority
+            selectedMap = data.selectedMap or selectedMap
+            targetType = data.targetType or targetType
+            targetPriority = data.targetPriority or targetPriority
         end
     end
 end
 
--- GUI
 local gui = Instance.new("ScreenGui")
 gui.Name = "GodTindxrHubLite"
 gui.ResetOnSpawn = false
@@ -86,6 +81,7 @@ local function createButton(text, pos, size, parent)
     return btn
 end
 
+-- GUI Buttons
 local normalBtn = createButton("Normal", UDim2.new(0, 10, 0, 40), UDim2.new(0, 120, 0, 30), frame)
 local bossBtn = createButton("Boss", UDim2.new(0, 140, 0, 40), UDim2.new(0, 120, 0, 30), frame)
 local allBtn = createButton("All", UDim2.new(0, 270, 0, 40), UDim2.new(0, 120, 0, 30), frame)
@@ -100,9 +96,20 @@ bossHopToggle.MouseButton1Click:Connect(function()
     bossHopToggle.Text = "🎯 AutoHop Boss: " .. (autoBossHopEnabled and "ON" or "OFF")
 end)
 
+local saveBtn = createButton("💾 Save Config", UDim2.new(0, 10, 0, 210), UDim2.new(0.5, -15, 0, 30), frame)
+saveBtn.MouseButton1Click:Connect(function()
+    saveConfig()
+end)
+
+local loadBtn = createButton("📂 Load Config", UDim2.new(0.5, 5, 0, 210), UDim2.new(0.5, -15, 0, 30), frame)
+loadBtn.MouseButton1Click:Connect(function()
+    loadConfig()
+    updateButtons()
+end)
+
 local statusLabel = Instance.new("TextLabel")
 statusLabel.Size = UDim2.new(1, -20, 0, 30)
-statusLabel.Position = UDim2.new(0, 10, 0, 205)
+statusLabel.Position = UDim2.new(0, 10, 0, 250)
 statusLabel.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 statusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 statusLabel.Font = Enum.Font.SourceSansBold
@@ -111,8 +118,8 @@ statusLabel.Text = "สถานะ: รอเลือกแมพ"
 statusLabel.Parent = frame
 
 local mapScroller = Instance.new("ScrollingFrame")
-mapScroller.Size = UDim2.new(1, -20, 0, 240)
-mapScroller.Position = UDim2.new(0, 10, 0, 250)
+mapScroller.Size = UDim2.new(1, -20, 0, 230)
+mapScroller.Position = UDim2.new(0, 10, 0, 290)
 mapScroller.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 mapScroller.ScrollBarThickness = 6
 mapScroller.AutomaticCanvasSize = Enum.AutomaticSize.Y
@@ -152,24 +159,10 @@ autofarmToggle.MouseButton1Click:Connect(function()
     autofarmToggle.Text = "เริ่ม Auto Farm: " .. (autofarmEnabled and "ON" or "OFF")
 end)
 
-local saveBtn = createButton("Save Config", UDim2.new(0, 10, 0, 460), UDim2.new(0.5, -15, 0, 30), frame)
-saveBtn.MouseButton1Click:Connect(function()
-    saveConfig()
-    statusLabel.Text = "✅ บันทึก Config เรียบร้อย"
-end)
-
-local loadBtn = createButton("Load Config", UDim2.new(0.5, 5, 0, 460), UDim2.new(0.5, -15, 0, 30), frame)
-loadBtn.MouseButton1Click:Connect(function()
-    loadConfig()
-    updateButtons()
-    statusLabel.Text = selectedMap and ("📂 โหลด Config: " .. selectedMap) or "สถานะ: รอเลือกแมพ"
-end)
-
 loadConfig()
 updateButtons()
 statusLabel.Text = selectedMap and ("📂 โหลด Config: " .. selectedMap) or "สถานะ: รอเลือกแมพ"
-
--- ระบบฟาร์ม
+-- 🔫 ระบบ AutoFarm
 task.spawn(function()
     while task.wait(0.05) do
         if autofarmEnabled and selectedMap then
@@ -182,26 +175,36 @@ task.spawn(function()
                             local isBoss = mob:GetAttribute("BossSize") ~= nil
                             local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
                             if hrp and math.abs(hrp.Position.Y - mob.Position.Y) <= 40 then
-                                if isBoss then table.insert(bosses, mob) else table.insert(normals, mob) end
+                                if isBoss then
+                                    table.insert(bosses, mob)
+                                else
+                                    table.insert(normals, mob)
+                                end
                             end
                         end
                     end
-                    local targetList = (targetType == "Boss" and bosses) or (targetType == "Normal" and normals) or (#bosses > 0 and bosses or normals)
+
+                    local targetList = (targetType == "Boss" and bosses)
+                        or (targetType == "Normal" and normals)
+                        or (#bosses > 0 and bosses or normals)
+
                     local targetMob, compare = nil, (targetPriority == "Highest") and -math.huge or math.huge
                     for _, mob in ipairs(targetList) do
                         local hp = mob:GetAttribute("HP") or 0
-                        if (targetPriority == "Highest" and hp > compare) or (targetPriority == "Lowest" and hp < compare) then
+                        if (targetPriority == "Highest" and hp > compare)
+                        or (targetPriority == "Lowest" and hp < compare) then
                             compare = hp
                             targetMob = mob
                         end
                     end
+
                     if targetMob and targetMob.Parent then
                         local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
                         if hrp then
                             hrp.CFrame = targetMob.CFrame * CFrame.new(0, 3, 0)
                             while task.wait(0.02) do
                                 if not autofarmEnabled or not targetMob.Parent or (targetMob:GetAttribute("HP") or 0) <= 0 then break end
-                                remote:FireServer({"Grind", targetMob})
+                                remote:FireServer({ "Grind", targetMob })
                             end
                         end
                     end
@@ -211,7 +214,7 @@ task.spawn(function()
     end
 end)
 
--- AutoHop Boss
+-- 🎯 ระบบ AutoHop Boss
 task.spawn(function()
     while task.wait(1) do
         if autoBossHopEnabled then
