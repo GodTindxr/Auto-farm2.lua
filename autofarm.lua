@@ -236,19 +236,8 @@ spawn(function()
         end
     end
 end)
--- 🆕 ปุ่ม Toggle สำหรับ AutoHop Boss Sakamote
-local autoBossHopEnabled = false
-local bossHopToggle = createButton("🎯 AutoHop Boss: OFF", UDim2.new(0, 10, 0, 160), UDim2.new(1, -20, 0, 30), frame)
-bossHopToggle.MouseButton1Click:Connect(function()
-    autoBossHopEnabled = not autoBossHopEnabled
-    bossHopToggle.Text = "🎯 AutoHop Boss: " .. (autoBossHopEnabled and "ON" or "OFF")
-end)
 
--- 🧠 ข้อมูลเซิร์ฟ
-local TeleportService = game:GetService("TeleportService")
-local PlaceId = game.PlaceId
-
--- 🔁 ระบบล่า Easter Sakamote แบบ Hop
+-- 🧠 ระบบล่า Easter Sakamote แบบ Hop
 spawn(function()
     while task.wait(1) do
         if autoBossHopEnabled then
