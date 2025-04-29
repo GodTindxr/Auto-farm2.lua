@@ -236,3 +236,58 @@ spawn(function()
         end
     end
 end)
+-- 🆕 ปุ่ม Toggle สำหรับ AutoHop Boss Sakamote
+local autoBossHopEnabled = false
+local bossHopToggle = createButton("🎯 AutoHop Boss: OFF", UDim2.new(0, 10, 0, 160), UDim2.new(1, -20, 0, 30), frame)
+bossHopToggle.MouseButton1Click:Connect(function()
+    autoBossHopEnabled = not autoBossHopEnabled
+    bossHopToggle.Text = "🎯 AutoHop Boss: " .. (autoBossHopEnabled and "ON" or "OFF")
+end)
+
+-- 🧠 ข้อมูลเซิร์ฟ
+local TeleportService = game:GetService("TeleportService")
+local PlaceId = game.PlaceId
+
+-- 🔁 ระบบล่า Easter Sakamote แบบ Hop
+spawn(function()
+    while task.wait(1) do
+        if autoBossHopEnabled then
+            pcall(function()
+                local bossMap = "Easter Event"
+                local bossName = "Easter Sakamote"
+                local bossFolder = workspace:FindFirstChild("Server")
+                    and workspace.Server:FindFirstChild("Mobs")
+                    and workspace.Server.Mobs:FindFirstChild(bossMap)
+
+                if bossFolder then
+                    local boss = bossFolder:FindFirstChild(bossName)
+
+                    if boss and boss:IsA("Part") and (boss:GetAttribute("HP") or 0) > 0 then
+                        local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+                        if hrp then
+                            hrp.CFrame = boss.CFrame * CFrame.new(0, 3, 0)
+                            while task.wait(0.02) do
+                                if not autoBossHopEnabled then break end
+                                if not boss.Parent then break end
+                                if (boss:GetAttribute("HP") or 0) <= 0 then break end
+                                remote:FireServer({ "Grind", boss })
+                            end
+                            task.wait(2.5)
+                        end
+                    else
+                        task.wait(2.5)
+                        local servers = HttpService:JSONDecode(game:HttpGet(
+                            "https://games.roblox.com/v1/games/" .. PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"
+                        ))
+                        for _, s in ipairs(servers.data) do
+                            if s.playing < s.maxPlayers and s.id ~= game.JobId then
+                                TeleportService:TeleportToPlaceInstance(PlaceId, s.id, player)
+                                break
+                            end
+                        end
+                    end
+                end
+            end)
+        end
+    end
+end)
