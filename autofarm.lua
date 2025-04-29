@@ -156,8 +156,6 @@ loadBtn.MouseButton1Click:Connect(function()
     end)
 end)
 
-
-local statusLabel = Instance.new("TextLabel")
 statusLabel.Size = UDim2.new(1, -20, 0, 30)
 statusLabel.Position = UDim2.new(0, 10, 0, 250)
 statusLabel.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
