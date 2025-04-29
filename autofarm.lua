@@ -96,16 +96,66 @@ bossHopToggle.MouseButton1Click:Connect(function()
     bossHopToggle.Text = "🎯 AutoHop Boss: " .. (autoBossHopEnabled and "ON" or "OFF")
 end)
 
+-- ✅ FIXED VERSION: Save Config + Load Config now works with visible GUI feedback (no nil errors)
+
+-- เพียงวางส่วนนี้แทนโค้ดปุ่ม Save/Load เดิม และย้าย statusLabel มาก่อนมัน
+
+-- 👇 ย้ายขึ้นมาวางก่อนสร้างปุ่ม Save/Load
+local statusLabel = Instance.new("TextLabel")
+statusLabel.Size = UDim2.new(1, -20, 0, 30)
+statusLabel.Position = UDim2.new(0, 10, 0, 250)
+statusLabel.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+statusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+statusLabel.Font = Enum.Font.SourceSansBold
+statusLabel.TextScaled = true
+statusLabel.Text = "สถานะ: รอเลือกแมพ"
+statusLabel.Parent = frame
+
+-- 👇 แล้ววางปุ่ม Save/Load แบบใหม่ (ปลอดภัย ใช้งานได้จริง)
 local saveBtn = createButton("💾 Save Config", UDim2.new(0, 10, 0, 210), UDim2.new(0.5, -15, 0, 30), frame)
 saveBtn.MouseButton1Click:Connect(function()
-    saveConfig()
+    if selectedMap then
+        saveConfig()
+        statusLabel.Text = "✅ Save Config สำเร็จแล้ว"
+        statusLabel.BackgroundColor3 = Color3.fromRGB(50, 200, 50) -- สีเขียว
+        task.delay(3, function()
+            statusLabel.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+        end)
+    else
+        statusLabel.Text = "⚠️ กรุณาเลือกแมพก่อนกดเซฟ"
+        statusLabel.BackgroundColor3 = Color3.fromRGB(200, 100, 0) -- สีส้มแดง
+        task.delay(3, function()
+            statusLabel.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+        end)
+    end
 end)
 
 local loadBtn = createButton("📂 Load Config", UDim2.new(0.5, 5, 0, 210), UDim2.new(0.5, -15, 0, 30), frame)
 loadBtn.MouseButton1Click:Connect(function()
     loadConfig()
     updateButtons()
+
+    if selectedMap then
+        statusLabel.Text = "📂 โหลด Config: " .. selectedMap
+        statusLabel.BackgroundColor3 = Color3.fromRGB(50, 100, 200)
+    else
+        statusLabel.Text = "⚠️ ยังไม่มี Config"
+        statusLabel.BackgroundColor3 = Color3.fromRGB(200, 100, 0)
+    end
+
+    for _, button in ipairs(mapScroller:GetChildren()) do
+        if button:IsA("TextButton") and button.Text == selectedMap then
+            button.BackgroundColor3 = Color3.fromRGB(80, 120, 200)
+        elseif button:IsA("TextButton") then
+            button.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+        end
+    end
+
+    task.delay(3, function()
+        statusLabel.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    end)
 end)
+
 
 local statusLabel = Instance.new("TextLabel")
 statusLabel.Size = UDim2.new(1, -20, 0, 30)
