@@ -256,6 +256,47 @@ autofarmToggle.MouseButton1Click:Connect(function()
     autofarmToggle.Text = "เริ่ม Auto Farm: " .. (autofarmEnabled and "ON" or "OFF")
 end)
 
+--// 🔄 AUTO BOSS HOP AND SHOOT (พร้อมตรวจสอบสถานะปุ่ม ON/OFF)
+task.spawn(function()
+    while task.wait(0.02) do  -- ทำงานทุกๆ 0.02 วินาที
+        if autoBossHopEnabled then  -- ถ้า AutoHopBoss เปิด
+            pcall(function()
+                local bossPath = workspace.Server.Mobs["Easter Event"]["Easter Sakamote"]
+                local bossSpawnPosition = bossPath and bossPath.Position or nil
+
+                if bossSpawnPosition then
+                    -- วาปไปที่ตำแหน่งที่บอสเกิด
+                    local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+                    if hrp then
+                        hrp.CFrame = CFrame.new(bossSpawnPosition + Vector3.new(0, 3, 0))  -- วาปไปที่บอส
+                    end
+
+                    -- ยิงใส่บอสต่อเนื่อง
+                    local targetMob = bossPath  -- ตั้งเป้าเป็นบอส Sakamoto
+                    if targetMob then
+                        local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+                        if hrp then
+                            while task.wait(0.1) do  -- ยิงทุกๆ 0.1 วินาที
+                                if not autoBossHopEnabled then
+                                    break  -- ถ้าปิด AutoHopBoss ให้หยุดยิง
+                                end
+                                if targetMob and targetMob.Parent and (targetMob:GetAttribute("HP") or 0) > 0 then
+                                    hrp.CFrame = targetMob.CFrame * CFrame.new(0, 3, 0)  -- ไปที่ตำแหน่งบอส
+                                    remote:FireServer({ "Grind", targetMob })  -- ส่งคำสั่งยิงบอส
+                                else
+                                    break  -- ถ้าบอสตายหรือไม่สามารถยิงได้จะหยุด
+                                end
+                            end
+                        end
+                    end
+                else
+                    print("ไม่พบตำแหน่งบอส Sakamoto")
+                end
+            end)
+        end
+    end
+end)
+
 -- 🎯 AutoHop Boss Toggle
 bossHopToggle.MouseButton1Click:Connect(function()
     -- สลับค่า autoBossHopEnabled
@@ -300,48 +341,6 @@ bossHopToggle.MouseButton1Click:Connect(function()
             hrp.CFrame = hrp.CFrame  -- หยุดที่ตำแหน่งปัจจุบัน
         end
     end
-end)
-
---// 🔄 AUTO BOSS HOP AND SHOOT
-task.spawn(function()
-    while task.wait(0.02) do  -- ทำงานทุกๆ 0.02 วินาที
-        if autoBossHopEnabled then  -- ถ้า AutoBossHop เปิด
-            pcall(function()
-                local bossPath = workspace.Server.Mobs["Easter Event"]["Easter Sakamote"]
-                local bossSpawnPosition = bossPath and bossPath.Position or nil
-
-                if bossSpawnPosition then
-                    -- วาปไปที่ตำแหน่งที่บอสเกิด
-                    local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-                    if hrp then
-                        hrp.CFrame = CFrame.new(bossSpawnPosition + Vector3.new(0, 3, 0))  -- วาปไปที่บอส
-                    end
-
-                    -- ยิงใส่บอสต่อเนื่อง
-                    local targetMob = bossPath  -- ตั้งเป้าเป็นบอส Sakamoto
-                    if targetMob then
-                        local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-                        if hrp then
-                            while task.wait(0.1) do  -- ยิงทุกๆ 0.1 วินาที
-                                if targetMob and targetMob.Parent and (targetMob:GetAttribute("HP") or 0) > 0 then
-                                    hrp.CFrame = targetMob.CFrame * CFrame.new(0, 3, 0)  -- ไปที่ตำแหน่งบอส
-                                    remote:FireServer({ "Grind", targetMob })  -- ส่งคำสั่งยิงบอส
-                                else
-                                    break  -- ถ้าบอสตายหรือไม่สามารถยิงได้จะหยุด
-                                end
-                            end
-                        end
-                    end
-                else
-                    print("ไม่พบตำแหน่งบอส Sakamoto")
-                end
-            end)
-        end
-    end
-end)
-rankUpBtn.MouseButton1Click:Connect(function()
-    autoRankUpEnabled = not autoRankUpEnabled
-    rankUpBtn.Text = "🆙 Auto RankUp: " .. (autoRankUpEnabled and "ON" or "OFF")
 end)
 
 --// 🔫 AUTO FARM LOOP
