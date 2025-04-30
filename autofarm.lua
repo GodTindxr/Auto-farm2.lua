@@ -265,9 +265,9 @@ task.spawn(function()
                 local bossHP = bossPath and bossPath:GetAttribute("HP") or 0
 
                 if bossHP <= 1 then  -- ถ้าบอส HP เหลือ 1
-                    task.wait(5)  -- รอให้บอสถูกลบหลังจาก HP เหลือ 1
+                    task.wait(5)  -- รอ 5 วินาที ให้บอสถูกลบจากเกม
 
-                    -- ถ้าบอสถูกลบ
+                    -- ถ้าบอสถูกลบจากเกม
                     if not bossPath.Parent then
                         print("บอสถูกลบออกจากเกมแล้ว")
                         
@@ -283,6 +283,8 @@ task.spawn(function()
                                     -- ถ้ามีบอส ให้ทำการ Hop ไปเซิร์ฟเวอร์นี้
                                     TeleportService:TeleportToPlaceInstance(PlaceId, s.id, player)  -- ทำการ Teleport ไปเซิร์ฟเวอร์ใหม่
                                     break  -- หยุดการทำงานเมื่อพบเซิร์ฟเวอร์ที่มีบอส
+                                else
+                                    print("ไม่พบบอสในเซิร์ฟเวอร์นี้")
                                 end
                             end
                         end
