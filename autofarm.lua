@@ -256,6 +256,7 @@ autofarmToggle.MouseButton1Click:Connect(function()
     autofarmToggle.Text = "เริ่ม Auto Farm: " .. (autofarmEnabled and "ON" or "OFF")
 end)
 
+--// 🎯 AutoHop Boss Toggle
 bossHopToggle.MouseButton1Click:Connect(function()
     -- สลับค่า autoBossHopEnabled
     autoBossHopEnabled = not autoBossHopEnabled
@@ -275,11 +276,16 @@ bossHopToggle.MouseButton1Click:Connect(function()
             if boss and boss:IsA("Part") then
                 local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
                 if hrp then
-                    -- วาปไปหาบอส
+                    -- วาปไปหาบอส (แม้ว่าบอสจะตายหรือไม่ตาย)
                     hrp.CFrame = boss.CFrame * CFrame.new(0, 3, 0)
+                    print("วาปไปหาบอสที่: " .. tostring(boss.Position))  -- ตรวจสอบตำแหน่งบอส
                     -- ส่งคำสั่งตีบอส
                     remote:FireServer({ "Grind", boss })
+                else
+                    print("ไม่พบ HumanoidRootPart ของผู้เล่น!")
                 end
+            else
+                print("ไม่พบบอส!")
             end
         end
     else
@@ -381,4 +387,3 @@ task.spawn(function()
         end
     end
 end)
-
