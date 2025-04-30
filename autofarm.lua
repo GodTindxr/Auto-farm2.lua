@@ -113,6 +113,7 @@ local function createButton(text, pos, size, parent)
     btn.Parent = parent
     return btn
 end
+
 -- 🎛️ BUTTONS
 local normalBtn = createButton("Normal", UDim2.new(0, 10, 0, 0), UDim2.new(0, 120, 0, 30), farmPage)
 local bossBtn = createButton("Boss", UDim2.new(0, 140, 0, 0), UDim2.new(0, 120, 0, 30), farmPage)
@@ -139,7 +140,6 @@ statusLabel.Font = Enum.Font.SourceSansBold
 statusLabel.TextScaled = true
 statusLabel.Text = "สถานะ: รอเลือกแมพ"
 statusLabel.Parent = farmPage
-
 -- 💾 SAVE / LOAD BUTTONS
 local saveBtn = createButton("💾 Save Config", UDim2.new(0, 10, 0, 240), UDim2.new(0.5, -15, 0, 30), farmPage)
 local loadBtn = createButton("📂 Load Config", UDim2.new(0.5, 5, 0, 240), UDim2.new(0.5, -15, 0, 30), farmPage)
@@ -228,6 +228,7 @@ loadBtn.MouseButton1Click:Connect(function()
         statusLabel.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
     end)
 end)
+
 --// 🗺️ MAP BUTTONS
 for _, mapName in ipairs(maps) do
     local mapButton = createButton(mapName, UDim2.new(0, 0, 0, 0), UDim2.new(1, 0, 0, 40), mapScroller)
@@ -256,8 +257,38 @@ autofarmToggle.MouseButton1Click:Connect(function()
 end)
 
 bossHopToggle.MouseButton1Click:Connect(function()
+    -- สลับค่า autoBossHopEnabled
     autoBossHopEnabled = not autoBossHopEnabled
+
+    -- ปรับข้อความปุ่ม
     bossHopToggle.Text = "🎯 AutoHop Boss: " .. (autoBossHopEnabled and "ON" or "OFF")
+
+    -- เมื่อเปิด AutoHop Boss ให้ทำการวาปไปหาบอส
+    if autoBossHopEnabled then
+        -- ค้นหาบอส (ตัวอย่างใช้ "Easter Sakamoto")
+        local bossMap = "Easter Event"
+        local bossName = "Easter Sakamoto"
+        local bossFolder = workspace:FindFirstChild("Server") and workspace.Server:FindFirstChild("Mobs") and workspace.Server.Mobs:FindFirstChild(bossMap)
+
+        if bossFolder then
+            local boss = bossFolder:FindFirstChild(bossName)
+            if boss and boss:IsA("Part") then
+                local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+                if hrp then
+                    -- วาปไปหาบอส
+                    hrp.CFrame = boss.CFrame * CFrame.new(0, 3, 0)
+                    -- ส่งคำสั่งตีบอส
+                    remote:FireServer({ "Grind", boss })
+                end
+            end
+        end
+    else
+        -- หากปิด AutoHop Boss ให้หยุดการวาป
+        local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            hrp.CFrame = hrp.CFrame  -- หยุดที่ตำแหน่งปัจจุบัน
+        end
+    end
 end)
 
 rankUpBtn.MouseButton1Click:Connect(function()
@@ -328,22 +359,13 @@ task.spawn(function()
                 if bossFolder then
                     local boss = bossFolder:FindFirstChild(bossName)
                     if boss and boss:IsA("Part") then
-                        -- ตรวจสอบว่า HP ของบอสยังเหลืออยู่
+                        -- ตรวจสอบว่า HP ของบอสยังเหลืออยู่และตรวจสอบ DeleteAfterDying5
                         local bossHP = boss:GetAttribute("HP") or 0
+                        local deleteAfterDying5 = boss:GetAttribute("DeleteAfterDying5") or false
                         
-                        if bossHP > 0 then
-                            -- วาปไปหาบอส (ตำแหน่งปัจจุบัน + แก้ไขเล็กน้อยให้ห่างจากบอส)
-                            local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-                            if hrp then
-                                -- วาปไปหาบอสแบบต่อเนื่อง
-                                hrp.CFrame = CFrame.new(boss.Position + Vector3.new(0, 3, 0))  -- วาปไปหาบอส
-
-                                -- ทำการยิงบอส
-                                remote:FireServer({ "Grind", boss })
-                            end
-                        else
-                            -- ถ้าบอสไม่มี HP หรือหายไป ให้ทำการ Hop ไปเซิร์ฟเวอร์ใหม่
-                            task.wait(10)
+                        if bossHP <= 1 and deleteAfterDying5 then
+                            -- ถ้าบอสมี HP ≤ 1 และมี DeleteAfterDying5 เป็น true ให้ทำการ Hop ไปเซิร์ฟเวอร์ใหม่
+                            task.wait(10)  -- รอ 10 วินาที เพื่อให้บอสถูกลบ
                             local servers = HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"))
                             for _, s in ipairs(servers.data) do
                                 -- ถ้าเซิร์ฟเวอร์นั้นเล่นน้อยกว่าหรือไม่ใช่เซิร์ฟเวอร์ปัจจุบัน
@@ -360,32 +382,3 @@ task.spawn(function()
     end
 end)
 
---// เมื่อปิด AutoBossHop ให้หยุดวาปไปหาบอส
-bossHopToggle.MouseButton1Click:Connect(function()
-    autoBossHopEnabled = not autoBossHopEnabled
-    bossHopToggle.Text = "🎯 AutoHop Boss: " .. (autoBossHopEnabled and "ON" or "OFF")
-    -- ถ้าปิดการวาปไปหาบอส
-    if not autoBossHopEnabled then
-        -- หยุดการวาปไปหาบอส
-        local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-        if hrp then
-            hrp.CFrame = hrp.CFrame  -- หยุดการเคลื่อนที่
-        end
-    end
-end)
-
---// 🆙 AUTO RANK UP LOOP
-task.spawn(function()
-    while task.wait(5) do
-        if autoRankUpEnabled then
-            pcall(function()
-                local args = {
-                    [1] = {
-                        [1] = "RankUp"
-                    }
-                }
-                game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Server"):FireServer(unpack(args))
-            end)
-        end
-    end
-end)
