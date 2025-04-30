@@ -342,7 +342,7 @@ task.spawn(function()
                         end
                     else
                         -- ถ้าบอสไม่อยู่ หรือ HP ของบอส <= 0 ให้ทำการ Hop ไปเซิร์ฟเวอร์ใหม่
-                        task.wait(10)  -- รอ 5 วินาทีก่อนที่จะทำการ Hop ไปเซิร์ฟเวอร์ใหม่
+                        task.wait(5)  -- รอ 5 วินาทีก่อนที่จะทำการ Hop ไปเซิร์ฟเวอร์ใหม่
                         local servers = HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"))
                         for _, s in ipairs(servers.data) do
                             -- ถ้าเซิร์ฟเวอร์เล่นน้อยกว่าและไม่ได้เป็นเซิร์ฟเวอร์ปัจจุบัน
