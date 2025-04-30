@@ -113,6 +113,7 @@ saveBtn.MouseButton1Click:Connect(function()
     end
 end)
 
+
 local mapScroller = Instance.new("ScrollingFrame")
 mapScroller.Size = UDim2.new(1, -20, 0, 230)
 mapScroller.Position = UDim2.new(0, 10, 0, 290)
@@ -209,48 +210,6 @@ loadConfig()
 updateButtons()
 statusLabel.Text = selectedMap and ("📂 โหลด Config: " .. selectedMap) or "สถานะ: รอเลือกแมพ"
 
---// 🔫 AUTO FARM LOOP
-task.spawn(function()
-    while task.wait(0.05) do
-        if autofarmEnabled and selectedMap then
-            pcall(function()
-                local mobsFolder = workspace:WaitForChild("Server"):WaitForChild("Mobs"):FindFirstChild(selectedMap)
-                if mobsFolder then
-                    local bosses, normals = {}, {}
-                    for _, mob in ipairs(mobsFolder:GetChildren()) do
-                        if mob:IsA("Part") and mob:GetAttribute("HP") then
-                            local isBoss = mob:GetAttribute("BossSize") ~= nil
-                            local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-                            if hrp and math.abs(hrp.Position.Y - mob.Position.Y) <= 40 then
-                                if isBoss then table.insert(bosses, mob) else table.insert(normals, mob) end
-                            end
-                        end
-                    end
-                    local targetList = (targetType == "Boss" and bosses) or (targetType == "Normal" and normals) or (#bosses > 0 and bosses or normals)
-                    local targetMob, compare = nil, (targetPriority == "Highest") and -math.huge or math.huge
-                    for _, mob in ipairs(targetList) do
-                        local hp = mob:GetAttribute("HP") or 0
-                        if (targetPriority == "Highest" and hp > compare) or (targetPriority == "Lowest" and hp < compare) then
-                            compare = hp
-                            targetMob = mob
-                        end
-                    end
-                    if targetMob and targetMob.Parent then
-                        local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-                        if hrp then
-                            hrp.CFrame = targetMob.CFrame * CFrame.new(0, 3, 0)
-                            while task.wait(0.02) do
-                                if not autofarmEnabled or not targetMob.Parent or (targetMob:GetAttribute("HP") or 0) <= 0 then break end
-                                remote:FireServer({ "Grind", targetMob })
-                            end
-                        end
-                    end
-                end
-            end)
-        end
-    end
-end)
-
 --// 🔁 AUTO BOSS HOP
 task.spawn(function()
     while task.wait(1) do
@@ -264,9 +223,11 @@ task.spawn(function()
                     if boss and boss:IsA("Part") and (boss:GetAttribute("HP") or 0) > 0 then
                         local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
                         if hrp then
-                            hrp.CFrame = boss.CFrame * CFrame.new(0, 3, 0)
                             while task.wait(0.02) do
-                                if not autoBossHopEnabled or not boss.Parent or (boss:GetAttribute("HP") or 0) <= 0 then break end
+                                if not autoBossHopEnabled or not boss.Parent or (boss:GetAttribute("HP") or 0) <= 0 then
+                                    break
+                                end
+                                hrp.CFrame = boss.CFrame * CFrame.new(0, 3, 0)
                                 remote:FireServer({ "Grind", boss })
                             end
                         end
