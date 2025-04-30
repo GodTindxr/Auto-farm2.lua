@@ -338,7 +338,6 @@ bossHopToggle.MouseButton1Click:Connect(function()
     end
 end)
 
-
 --// 🔫 AUTO FARM LOOP
 task.spawn(function()
     while task.wait(0) do  -- ปรับการรอให้เร็วขึ้น
