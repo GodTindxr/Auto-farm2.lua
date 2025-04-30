@@ -232,7 +232,7 @@ task.spawn(function()
                             end
                         end
                     else
-                        task.wait(5)
+                        task.wait(10)
                         local servers = HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"))
                         for _, s in ipairs(servers.data) do
                             if s.playing < s.maxPlayers and s.id ~= game.JobId then
