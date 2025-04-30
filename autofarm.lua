@@ -318,8 +318,8 @@ end)
 
 --// 🔁 AUTO BOSS HOP
 task.spawn(function()
-    while task.wait(1) do
-        if autoBossHopEnabled then
+    while task.wait(0.02) do
+        if autoBossHopEnabled then  -- ถ้า AutoBossHop เปิด
             pcall(function()
                 local bossMap = "Easter Event"
                 local bossName = "Easter Sakamote"
@@ -332,25 +332,18 @@ task.spawn(function()
                         local bossHP = boss:GetAttribute("HP") or 0
                         
                         if bossHP > 0 then
-                            -- ถ้าบอสมี HP > 0 ก็ทำการล๊อคตำแหน่งและยิง
+                            -- วาปไปหาบอส (ตำแหน่งปัจจุบัน + แก้ไขเล็กน้อยให้ห่างจากบอส)
                             local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
                             if hrp then
-                                -- วาปไปยังตำแหน่งของบอส
-                                hrp.CFrame = CFrame.new(boss.Position + Vector3.new(0, 3, 0))  -- เพิ่มระยะที่แน่นอนให้ห่างจากบอสเล็กน้อย
+                                -- วาปไปหาบอสแบบต่อเนื่อง
+                                hrp.CFrame = CFrame.new(boss.Position + Vector3.new(0, 3, 0))  -- วาปไปหาบอส
 
                                 -- ทำการยิงบอส
-                                while task.wait(0.02) do
-                                    -- ถ้าบอสตายหรือ HP หมดหรือไม่อยู่ ให้หยุด
-                                    if not autoBossHopEnabled or not boss.Parent or bossHP <= 0 then
-                                        break
-                                    end
-                                    -- ส่งคำสั่งไปยิงบอส
-                                    remote:FireServer({ "Grind", boss })
-                                end
+                                remote:FireServer({ "Grind", boss })
                             end
                         else
                             -- ถ้าบอสไม่มี HP หรือหายไป ให้ทำการ Hop ไปเซิร์ฟเวอร์ใหม่
-                            task.wait(5)  -- รอ 5 วินาที ก่อนการ Hop ไปเซิร์ฟเวอร์ใหม่
+                            task.wait(10)
                             local servers = HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"))
                             for _, s in ipairs(servers.data) do
                                 -- ถ้าเซิร์ฟเวอร์นั้นเล่นน้อยกว่าหรือไม่ใช่เซิร์ฟเวอร์ปัจจุบัน
@@ -363,6 +356,20 @@ task.spawn(function()
                     end
                 end
             end)
+        end
+    end
+end)
+
+--// เมื่อปิด AutoBossHop ให้หยุดวาปไปหาบอส
+bossHopToggle.MouseButton1Click:Connect(function()
+    autoBossHopEnabled = not autoBossHopEnabled
+    bossHopToggle.Text = "🎯 AutoHop Boss: " .. (autoBossHopEnabled and "ON" or "OFF")
+    -- ถ้าปิดการวาปไปหาบอส
+    if not autoBossHopEnabled then
+        -- หยุดการวาปไปหาบอส
+        local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            hrp.CFrame = hrp.CFrame  -- หยุดการเคลื่อนที่
         end
     end
 end)
