@@ -338,7 +338,7 @@ end)
 
 --// 🔫 AUTO FARM LOOP
 task.spawn(function()
-    while task.wait(0.05) do
+    while task.wait(0) do  -- ปรับการรอให้เร็วขึ้น
         if autofarmEnabled and selectedMap then
             pcall(function()
                 local mobsFolder = workspace:WaitForChild("Server"):WaitForChild("Mobs"):FindFirstChild(selectedMap)
@@ -374,7 +374,7 @@ task.spawn(function()
                     if targetMob and targetMob.Parent then
                         local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
                         if hrp then
-                            while task.wait(0.02) do
+                            while task.wait(0) do  -- เร่งการยิง
                                 if not autofarmEnabled or not targetMob.Parent or (targetMob:GetAttribute("HP") or 0) <= 0 then break end
                                 hrp.CFrame = targetMob.CFrame * CFrame.new(0, 3, 0)
                                 remote:FireServer({ "Grind", targetMob })
