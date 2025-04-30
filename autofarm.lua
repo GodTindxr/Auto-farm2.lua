@@ -393,3 +393,18 @@ task.spawn(function()
         end
     end
 end)
+--// 🆙 AUTO RANK UP LOOP
+task.spawn(function()
+    while task.wait(5) do
+        if autoRankUpEnabled then
+            pcall(function()
+                local args = {
+                    [1] = {
+                        [1] = "RankUp"
+                    }
+                }
+                game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Server"):FireServer(unpack(args))
+            end)
+        end
+    end
+end)
