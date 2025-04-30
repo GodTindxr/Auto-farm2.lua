@@ -256,41 +256,37 @@ autofarmToggle.MouseButton1Click:Connect(function()
     autofarmToggle.Text = "เริ่ม Auto Farm: " .. (autofarmEnabled and "ON" or "OFF")
 end)
 
---// 🔄 AUTO BOSS HOP AND SHOOT (พร้อมตรวจสอบสถานะปุ่ม ON/OFF)
+--// 🎯 AUTO HOP AFTER BOSS DEATH (ตรวจสอบการ Hop ไปเซิร์ฟเวอร์ใหม่)
 task.spawn(function()
     while task.wait(0.02) do  -- ทำงานทุกๆ 0.02 วินาที
         if autoBossHopEnabled then  -- ถ้า AutoHopBoss เปิด
             pcall(function()
                 local bossPath = workspace.Server.Mobs["Easter Event"]["Easter Sakamote"]
-                local bossSpawnPosition = bossPath and bossPath.Position or nil
+                local bossHP = bossPath and bossPath:GetAttribute("HP") or 0
 
-                if bossSpawnPosition then
-                    -- วาปไปที่ตำแหน่งที่บอสเกิด
-                    local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-                    if hrp then
-                        hrp.CFrame = CFrame.new(bossSpawnPosition + Vector3.new(0, 3, 0))  -- วาปไปที่บอส
-                    end
+                if bossHP <= 1 then  -- ถ้าบอส HP เหลือ 1
+                    task.wait(5)  -- รอให้บอสถูกลบหลังจาก HP เหลือ 1
 
-                    -- ยิงใส่บอสต่อเนื่อง
-                    local targetMob = bossPath  -- ตั้งเป้าเป็นบอส Sakamoto
-                    if targetMob then
-                        local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-                        if hrp then
-                            while task.wait(0.1) do  -- ยิงทุกๆ 0.1 วินาที
-                                if not autoBossHopEnabled then
-                                    break  -- ถ้าปิด AutoHopBoss ให้หยุดยิง
-                                end
-                                if targetMob and targetMob.Parent and (targetMob:GetAttribute("HP") or 0) > 0 then
-                                    hrp.CFrame = targetMob.CFrame * CFrame.new(0, 3, 0)  -- ไปที่ตำแหน่งบอส
-                                    remote:FireServer({ "Grind", targetMob })  -- ส่งคำสั่งยิงบอส
-                                else
-                                    break  -- ถ้าบอสตายหรือไม่สามารถยิงได้จะหยุด
+                    -- ถ้าบอสถูกลบ
+                    if not bossPath.Parent then
+                        print("บอสถูกลบออกจากเกมแล้ว")
+                        
+                        -- ทำการ Hop ไปเซิร์ฟเวอร์ใหม่
+                        local servers = HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"))
+                        
+                        for _, s in ipairs(servers.data) do
+                            -- ถ้าเซิร์ฟเวอร์นั้นเล่นน้อยกว่าหรือไม่ใช่เซิร์ฟเวอร์ปัจจุบัน
+                            if s.playing < s.maxPlayers and s.id ~= game.JobId then
+                                -- ตรวจสอบว่าเซิร์ฟเวอร์นี้มีบอสหรือไม่
+                                local newBossPath = game:GetService("Workspace"):WaitForChild("Server"):WaitForChild("Mobs"):FindFirstChild("Easter Event")
+                                if newBossPath and newBossPath:FindFirstChild("Easter Sakamote") then
+                                    -- ถ้ามีบอส ให้ทำการ Hop ไปเซิร์ฟเวอร์นี้
+                                    TeleportService:TeleportToPlaceInstance(PlaceId, s.id, player)  -- ทำการ Teleport ไปเซิร์ฟเวอร์ใหม่
+                                    break  -- หยุดการทำงานเมื่อพบเซิร์ฟเวอร์ที่มีบอส
                                 end
                             end
                         end
                     end
-                else
-                    print("ไม่พบตำแหน่งบอส Sakamoto")
                 end
             end)
         end
