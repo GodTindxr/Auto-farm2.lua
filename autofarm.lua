@@ -298,7 +298,7 @@ end)
 --// 🆙 AUTO RANK UP TOGGLE
 local autoRankUpEnabled = false
 
-local rankUpBtn = createButton("🆙 Auto RankUp: OFF", UDim2.new(0, 10, 0, 210), UDim2.new(1, -20, 0, 30), frame)
+local rankUpBtn = createButton("🆙 Auto RankUp: OFF", UDim2.new(0, 10, 0, 250), UDim2.new(1, -20, 0, 30), frame)
 rankUpBtn.BackgroundColor3 = Color3.fromRGB(150, 100, 200)
 
 rankUpBtn.MouseButton1Click:Connect(function()
