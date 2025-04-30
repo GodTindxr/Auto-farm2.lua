@@ -324,24 +324,31 @@ task.spawn(function()
                 local bossMap = "Easter Event"
                 local bossName = "Easter Sakamote"
                 local bossFolder = workspace:FindFirstChild("Server") and workspace.Server:FindFirstChild("Mobs") and workspace.Server.Mobs:FindFirstChild(bossMap)
+                
                 if bossFolder then
                     local boss = bossFolder:FindFirstChild(bossName)
                     if boss and boss:IsA("Part") and (boss:GetAttribute("HP") or 0) > 0 then
+                        -- ถ้าบอสยังมี HP มากกว่า 0
                         local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
                         if hrp then
                             while task.wait(0.02) do
-                                if not autoBossHopEnabled or not boss.Parent or (boss:GetAttribute("HP") or 0) <= 0 then break end
+                                -- ตรวจสอบว่าบอสยังอยู่และยังมี HP ก่อนที่มันจะย้ายไปเซิร์ฟเวอร์ใหม่
+                                if not autoBossHopEnabled or not boss.Parent or (boss:GetAttribute("HP") or 0) <= 0 then
+                                    break  -- หยุดหากบอสตายหรือล็อกออก
+                                end
                                 hrp.CFrame = boss.CFrame * CFrame.new(0, 3, 0)
                                 remote:FireServer({ "Grind", boss })
                             end
                         end
                     else
-                        task.wait(10)
+                        -- ถ้าบอสไม่อยู่ หรือ HP ของบอส <= 0 ให้ทำการ Hop ไปเซิร์ฟเวอร์ใหม่
+                        task.wait(10)  -- รอ 5 วินาทีก่อนที่จะทำการ Hop ไปเซิร์ฟเวอร์ใหม่
                         local servers = HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"))
                         for _, s in ipairs(servers.data) do
+                            -- ถ้าเซิร์ฟเวอร์เล่นน้อยกว่าและไม่ได้เป็นเซิร์ฟเวอร์ปัจจุบัน
                             if s.playing < s.maxPlayers and s.id ~= game.JobId then
                                 TeleportService:TeleportToPlaceInstance(PlaceId, s.id, player)
-                                break
+                                break  -- หลังจากที่พบเซิร์ฟเวอร์ที่เหมาะสมจะทำการ Teleport
                             end
                         end
                     end
@@ -350,6 +357,7 @@ task.spawn(function()
         end
     end
 end)
+
 
 --// 🆙 AUTO RANK UP LOOP
 task.spawn(function()
