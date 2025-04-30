@@ -302,29 +302,38 @@ bossHopToggle.MouseButton1Click:Connect(function()
     end
 end)
 
---// 🔄 AUTO BOSS HOP
+--// 🔄 AUTO BOSS HOP AND SHOOT
 task.spawn(function()
     while task.wait(0.02) do  -- ทำงานทุกๆ 0.02 วินาที
         if autoBossHopEnabled then  -- ถ้า AutoBossHop เปิด
             pcall(function()
                 local bossPath = workspace.Server.Mobs["Easter Event"]["Easter Sakamote"]
+                local bossSpawnPosition = bossPath and bossPath.Position or nil
 
-                if bossPath and bossPath:IsA("Part") then
-                    local bossHP = bossPath:GetAttribute("HP") or 0
-                    local deleteAfterDying5 = bossPath:GetAttribute("DeleteAfterDying5") or false
-                    
-                    if bossHP <= 1 and deleteAfterDying5 then
-                        -- ถ้าบอสมี HP ≤ 1 และมี DeleteAfterDying5 เป็น true ให้ทำการ Hop ไปเซิร์ฟเวอร์ใหม่
-                        task.wait(5)  -- รอ 5 วินาที ก่อนทำการ Hop ไปเซิร์ฟเวอร์ใหม่
-                        local servers = HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"))
-                        for _, s in ipairs(servers.data) do
-                            -- ถ้าเซิร์ฟเวอร์นั้นเล่นน้อยกว่าหรือไม่ใช่เซิร์ฟเวอร์ปัจจุบัน
-                            if s.playing < s.maxPlayers and s.id ~= game.JobId then
-                                TeleportService:TeleportToPlaceInstance(PlaceId, s.id, player)
-                                break  -- ทำการ Teleport ไปเซิร์ฟเวอร์ใหม่
+                if bossSpawnPosition then
+                    -- วาปไปที่ตำแหน่งที่บอสเกิด
+                    local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+                    if hrp then
+                        hrp.CFrame = CFrame.new(bossSpawnPosition + Vector3.new(0, 3, 0))  -- วาปไปที่บอส
+                    end
+
+                    -- ยิงใส่บอสต่อเนื่อง
+                    local targetMob = bossPath  -- ตั้งเป้าเป็นบอส Sakamoto
+                    if targetMob then
+                        local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+                        if hrp then
+                            while task.wait(0.1) do  -- ยิงทุกๆ 0.1 วินาที
+                                if targetMob and targetMob.Parent and (targetMob:GetAttribute("HP") or 0) > 0 then
+                                    hrp.CFrame = targetMob.CFrame * CFrame.new(0, 3, 0)  -- ไปที่ตำแหน่งบอส
+                                    remote:FireServer({ "Grind", targetMob })  -- ส่งคำสั่งยิงบอส
+                                else
+                                    break  -- ถ้าบอสตายหรือไม่สามารถยิงได้จะหยุด
+                                end
                             end
                         end
                     end
+                else
+                    print("ไม่พบตำแหน่งบอส Sakamoto")
                 end
             end)
         end
