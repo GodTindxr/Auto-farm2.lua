@@ -313,19 +313,16 @@ bossHopToggle.MouseButton1Click:Connect(function()
             if hrp then
                 -- วาปไปหาบอส (ปรับการวาปไปที่บอสให้เป็นไปอย่างรวดเร็ว)
                 local targetPos = bossPath.Position
-                while autoBossHopEnabled do
-                    hrp.CFrame = CFrame.new(targetPos + Vector3.new(0, 3, 0)) -- วาปไปที่บอส
-                    -- ส่งคำสั่งตีบอส
-                    local args = {
-                        [1] = {
-                            [1] = "Grind",
-                            [2] = bossPath
-                        }
+                hrp.CFrame = CFrame.new(targetPos + Vector3.new(0, 3, 0))  -- วาปไปที่บอส
+                -- ส่งคำสั่งตีบอส
+                local args = {
+                    [1] = {
+                        [1] = "Grind",
+                        [2] = bossPath
                     }
-
-                    game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Server"):FireServer(unpack(args))
-                    task.wait(0.1)  -- รอการทำงานเพื่อให้การวาปเกิดขึ้นรัวๆ
-                end
+                }
+                -- เริ่มยิงบอสทันที
+                remote:FireServer(unpack(args))
             else
                 print("ไม่พบ HumanoidRootPart ของผู้เล่น!")
             end
@@ -340,6 +337,7 @@ bossHopToggle.MouseButton1Click:Connect(function()
         end
     end
 end)
+
 
 --// 🔫 AUTO FARM LOOP
 task.spawn(function()
