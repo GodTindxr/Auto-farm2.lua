@@ -256,7 +256,7 @@ autofarmToggle.MouseButton1Click:Connect(function()
     autofarmToggle.Text = "เริ่ม Auto Farm: " .. (autofarmEnabled and "ON" or "OFF")
 end)
 
---// 🎯 AutoHop Boss Toggle
+-- 🎯 AutoHop Boss Toggle
 bossHopToggle.MouseButton1Click:Connect(function()
     -- สลับค่า autoBossHopEnabled
     autoBossHopEnabled = not autoBossHopEnabled
@@ -272,11 +272,21 @@ bossHopToggle.MouseButton1Click:Connect(function()
         if bossPath and bossPath:IsA("Part") then
             local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
             if hrp then
-                -- วาปไปหาบอส
-                hrp.CFrame = bossPath.CFrame * CFrame.new(0, 3, 0)  -- ปรับตำแหน่งให้สูงขึ้น 3 Stud
-                print("วาปไปหาบอสที่: " .. tostring(bossPath.Position))  -- ตรวจสอบตำแหน่งบอส
-                -- ส่งคำสั่งตีบอส
-                remote:FireServer({ "Grind", bossPath })
+                -- วาปไปหาบอส (ปรับการวาปไปที่บอสให้เป็นไปอย่างรวดเร็ว)
+                local targetPos = bossPath.Position
+                while autoBossHopEnabled do
+                    hrp.CFrame = CFrame.new(targetPos + Vector3.new(0, 3, 0)) -- วาปไปที่บอส
+                    -- ส่งคำสั่งตีบอส
+                    local args = {
+                        [1] = {
+                            [1] = "Grind",
+                            [2] = bossPath
+                        }
+                    }
+
+                    game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("Server"):FireServer(unpack(args))
+                    task.wait(0.1)  -- รอการทำงานเพื่อให้การวาปเกิดขึ้นรัวๆ
+                end
             else
                 print("ไม่พบ HumanoidRootPart ของผู้เล่น!")
             end
@@ -292,6 +302,35 @@ bossHopToggle.MouseButton1Click:Connect(function()
     end
 end)
 
+--// 🔁 AUTO BOSS HOP
+task.spawn(function()
+    while task.wait(0.02) do
+        if autoBossHopEnabled then  -- ถ้า AutoBossHop เปิด
+            pcall(function()
+                local bossPath = workspace.Server.Mobs["Easter Event"]["Easter Sakamote"]
+
+                if bossPath and bossPath:IsA("Part") then
+                    -- ตรวจสอบว่า HP ของบอสยังเหลืออยู่และตรวจสอบ DeleteAfterDying5
+                    local bossHP = bossPath:GetAttribute("HP") or 0
+                    local deleteAfterDying5 = bossPath:GetAttribute("DeleteAfterDying5") or false
+                    
+                    if bossHP <= 1 and deleteAfterDying5 then
+                        -- ถ้าบอสมี HP ≤ 1 และมี DeleteAfterDying5 เป็น true ให้ทำการ Hop ไปเซิร์ฟเวอร์ใหม่
+                        task.wait(10)  -- รอ 10 วินาที เพื่อให้บอสถูกลบ
+                        local servers = HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"))
+                        for _, s in ipairs(servers.data) do
+                            -- ถ้าเซิร์ฟเวอร์นั้นเล่นน้อยกว่าหรือไม่ใช่เซิร์ฟเวอร์ปัจจุบัน
+                            if s.playing < s.maxPlayers and s.id ~= game.JobId then
+                                TeleportService:TeleportToPlaceInstance(PlaceId, s.id, player)
+                                break  -- ทำการ Teleport ไปเซิร์ฟเวอร์ใหม่
+                            end
+                        end
+                    end
+                end
+            end)
+        end
+    end
+end)
 rankUpBtn.MouseButton1Click:Connect(function()
     autoRankUpEnabled = not autoRankUpEnabled
     rankUpBtn.Text = "🆙 Auto RankUp: " .. (autoRankUpEnabled and "ON" or "OFF")
@@ -339,36 +378,6 @@ task.spawn(function()
                                 if not autofarmEnabled or not targetMob.Parent or (targetMob:GetAttribute("HP") or 0) <= 0 then break end
                                 hrp.CFrame = targetMob.CFrame * CFrame.new(0, 3, 0)
                                 remote:FireServer({ "Grind", targetMob })
-                            end
-                        end
-                    end
-                end
-            end)
-        end
-    end
-end)
-
---// 🔁 AUTO BOSS HOP
-task.spawn(function()
-    while task.wait(0.02) do
-        if autoBossHopEnabled then  -- ถ้า AutoBossHop เปิด
-            pcall(function()
-                local bossPath = workspace.Server.Mobs["Easter Event"]["Easter Sakamote"]
-
-                if bossPath and bossPath:IsA("Part") then
-                    -- ตรวจสอบว่า HP ของบอสยังเหลืออยู่และตรวจสอบ DeleteAfterDying5
-                    local bossHP = bossPath:GetAttribute("HP") or 0
-                    local deleteAfterDying5 = bossPath:GetAttribute("DeleteAfterDying5") or false
-                    
-                    if bossHP <= 1 and deleteAfterDying5 then
-                        -- ถ้าบอสมี HP ≤ 1 และมี DeleteAfterDying5 เป็น true ให้ทำการ Hop ไปเซิร์ฟเวอร์ใหม่
-                        task.wait(10)  -- รอ 10 วินาที เพื่อให้บอสถูกลบ
-                        local servers = HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"))
-                        for _, s in ipairs(servers.data) do
-                            -- ถ้าเซิร์ฟเวอร์นั้นเล่นน้อยกว่าหรือไม่ใช่เซิร์ฟเวอร์ปัจจุบัน
-                            if s.playing < s.maxPlayers and s.id ~= game.JobId then
-                                TeleportService:TeleportToPlaceInstance(PlaceId, s.id, player)
-                                break  -- ทำการ Teleport ไปเซิร์ฟเวอร์ใหม่
                             end
                         end
                     end
