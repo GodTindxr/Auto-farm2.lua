@@ -302,21 +302,20 @@ bossHopToggle.MouseButton1Click:Connect(function()
     end
 end)
 
---// 🔁 AUTO BOSS HOP
+--// 🔄 AUTO BOSS HOP
 task.spawn(function()
-    while task.wait(0.02) do
+    while task.wait(0.02) do  -- ทำงานทุกๆ 0.02 วินาที
         if autoBossHopEnabled then  -- ถ้า AutoBossHop เปิด
             pcall(function()
                 local bossPath = workspace.Server.Mobs["Easter Event"]["Easter Sakamote"]
 
                 if bossPath and bossPath:IsA("Part") then
-                    -- ตรวจสอบว่า HP ของบอสยังเหลืออยู่และตรวจสอบ DeleteAfterDying5
                     local bossHP = bossPath:GetAttribute("HP") or 0
                     local deleteAfterDying5 = bossPath:GetAttribute("DeleteAfterDying5") or false
                     
                     if bossHP <= 1 and deleteAfterDying5 then
                         -- ถ้าบอสมี HP ≤ 1 และมี DeleteAfterDying5 เป็น true ให้ทำการ Hop ไปเซิร์ฟเวอร์ใหม่
-                        task.wait(10)  -- รอ 10 วินาที เพื่อให้บอสถูกลบ
+                        task.wait(5)  -- รอ 5 วินาที ก่อนทำการ Hop ไปเซิร์ฟเวอร์ใหม่
                         local servers = HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"))
                         for _, s in ipairs(servers.data) do
                             -- ถ้าเซิร์ฟเวอร์นั้นเล่นน้อยกว่าหรือไม่ใช่เซิร์ฟเวอร์ปัจจุบัน
