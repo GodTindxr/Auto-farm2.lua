@@ -13,6 +13,7 @@ local selectedMap = nil
 local targetType = "All"
 local targetPriority = "Highest"
 local autoBossHopEnabled = false
+local autoRankUpEnabled = false
 
 local maps = {
     "Attack Titan", "Blearch", "Boku Academy", "Dark Clover", "Demon Slayeri", "Dragon Boru",
@@ -22,15 +23,12 @@ local maps = {
 }
 
 --// 💥 DESTROY OLD GUI
-local function destroyOldGUI(name)
-    for _, v in ipairs({player:FindFirstChild("PlayerGui"), game:GetService("CoreGui")}) do
-        if v then
-            local old = v:FindFirstChild(name)
-            if old then old:Destroy() end
-        end
+for _, v in ipairs({player:FindFirstChild("PlayerGui"), game:GetService("CoreGui")}) do
+    if v then
+        local old = v:FindFirstChild("GodTindxrHubLite")
+        if old then old:Destroy() end
     end
 end
-destroyOldGUI("GodTindxrHubLite")
 
 --// 💾 CONFIG SYSTEM
 local function saveConfig()
@@ -46,19 +44,62 @@ local function saveConfig()
     writefile(configFileName, json)
 end
 
---// 🧱 GUI BASE SETUP
+--// 🧱 GUI BASE WITH MAIN FRAME
 local gui = Instance.new("ScreenGui")
 gui.Name = "GodTindxrHubLite"
 gui.ResetOnSpawn = false
 gui.Parent = guiParent
 
-local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 500, 0, 500)
-frame.Position = UDim2.new(0, 10, 0, 10)
-frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-frame.Active = true
-frame.Draggable = true
-frame.Parent = gui
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 500, 0, 500)
+mainFrame.Position = UDim2.new(0, 10, 0, 10)
+mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+mainFrame.Active = true
+mainFrame.Draggable = true
+mainFrame.Parent = gui
+
+local tabBar = Instance.new("Frame")
+tabBar.Size = UDim2.new(0, 500, 0, 30)
+tabBar.Position = UDim2.new(0, 0, 0, 0)
+tabBar.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+tabBar.Parent = mainFrame
+
+local farmPage = Instance.new("Frame")
+farmPage.Size = UDim2.new(0, 500, 0, 470)
+farmPage.Position = UDim2.new(0, 0, 0, 30)
+farmPage.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+farmPage.Visible = true
+farmPage.Parent = mainFrame
+
+local eggPage = Instance.new("Frame")
+eggPage.Size = farmPage.Size
+eggPage.Position = farmPage.Position
+eggPage.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+eggPage.Visible = false
+eggPage.Parent = mainFrame
+
+local function createTabButton(name, pos, callback)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 100, 0, 30)
+    btn.Position = pos
+    btn.Text = name
+    btn.Font = Enum.Font.SourceSansBold
+    btn.TextScaled = true
+    btn.TextColor3 = Color3.new(1, 1, 1)
+    btn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+    btn.Parent = tabBar
+    btn.MouseButton1Click:Connect(callback)
+end
+
+createTabButton("🧪 Farm", UDim2.new(0, 0, 0, 0), function()
+    farmPage.Visible = true
+    eggPage.Visible = false
+end)
+
+createTabButton("🥚 Eggs", UDim2.new(0, 110, 0, 0), function()
+    farmPage.Visible = false
+    eggPage.Visible = true
+end)
 
 local function createButton(text, pos, size, parent)
     local btn = Instance.new("TextButton")
@@ -72,30 +113,79 @@ local function createButton(text, pos, size, parent)
     btn.Parent = parent
     return btn
 end
+-- 🎛️ BUTTONS
+local normalBtn = createButton("Normal", UDim2.new(0, 10, 0, 0), UDim2.new(0, 120, 0, 30), farmPage)
+local bossBtn = createButton("Boss", UDim2.new(0, 140, 0, 0), UDim2.new(0, 120, 0, 30), farmPage)
+local allBtn = createButton("All", UDim2.new(0, 270, 0, 0), UDim2.new(0, 120, 0, 30), farmPage)
 
---// 🎛️ BUTTONS
-local normalBtn = createButton("Normal", UDim2.new(0, 10, 0, 40), UDim2.new(0, 120, 0, 30), frame)
-local bossBtn = createButton("Boss", UDim2.new(0, 140, 0, 40), UDim2.new(0, 120, 0, 30), frame)
-local allBtn = createButton("All", UDim2.new(0, 270, 0, 40), UDim2.new(0, 120, 0, 30), frame)
-local lowHpBtn = createButton("เลือดน้อยก่อน", UDim2.new(0, 10, 0, 80), UDim2.new(0, 180, 0, 30), frame)
-local highHpBtn = createButton("เลือดมากก่อน", UDim2.new(0, 210, 0, 80), UDim2.new(0, 180, 0, 30), frame)
-local autofarmToggle = createButton("เริ่ม Auto Farm: OFF", UDim2.new(0, 10, 0, 120), UDim2.new(1, -20, 0, 40), frame)
+local lowHpBtn = createButton("เลือดน้อยก่อน", UDim2.new(0, 10, 0, 40), UDim2.new(0, 180, 0, 30), farmPage)
+local highHpBtn = createButton("เลือดมากก่อน", UDim2.new(0, 210, 0, 40), UDim2.new(0, 180, 0, 30), farmPage)
+
+local autofarmToggle = createButton("เริ่ม Auto Farm: OFF", UDim2.new(0, 10, 0, 80), UDim2.new(1, -20, 0, 30), farmPage)
 autofarmToggle.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
-local bossHopToggle = createButton("🎯 AutoHop Boss: OFF", UDim2.new(0, 10, 0, 170), UDim2.new(1, -20, 0, 30), frame)
 
---// 📋 STATUS LABEL
+local bossHopToggle = createButton("🎯 AutoHop Boss: OFF", UDim2.new(0, 10, 0, 120), UDim2.new(1, -20, 0, 30), farmPage)
+
+local rankUpBtn = createButton("🆙 Auto RankUp: OFF", UDim2.new(0, 10, 0, 160), UDim2.new(1, -20, 0, 30), farmPage)
+rankUpBtn.BackgroundColor3 = Color3.fromRGB(150, 100, 200)
+
+-- 📋 STATUS LABEL
 local statusLabel = Instance.new("TextLabel")
 statusLabel.Size = UDim2.new(1, -20, 0, 30)
-statusLabel.Position = UDim2.new(0, 10, 0, 250)
+statusLabel.Position = UDim2.new(0, 10, 0, 200)
 statusLabel.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 statusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 statusLabel.Font = Enum.Font.SourceSansBold
 statusLabel.TextScaled = true
 statusLabel.Text = "สถานะ: รอเลือกแมพ"
-statusLabel.Parent = frame
+statusLabel.Parent = farmPage
 
---// 💾 SAVE / LOAD BUTTONS
-local saveBtn = createButton("💾 Save Config", UDim2.new(0, 10, 0, 210), UDim2.new(0.5, -15, 0, 30), frame)
+-- 💾 SAVE / LOAD BUTTONS
+local saveBtn = createButton("💾 Save Config", UDim2.new(0, 10, 0, 240), UDim2.new(0.5, -15, 0, 30), farmPage)
+local loadBtn = createButton("📂 Load Config", UDim2.new(0.5, 5, 0, 240), UDim2.new(0.5, -15, 0, 30), farmPage)
+
+-- 🗺️ MAP SCROLLER
+local mapScroller = Instance.new("ScrollingFrame")
+mapScroller.Size = UDim2.new(1, -20, 0, 180)
+mapScroller.Position = UDim2.new(0, 10, 0, 280)
+mapScroller.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+mapScroller.ScrollBarThickness = 6
+mapScroller.AutomaticCanvasSize = Enum.AutomaticSize.Y
+mapScroller.CanvasSize = UDim2.new(0, 0, 0, 0)
+mapScroller.Parent = farmPage
+
+local layout = Instance.new("UIListLayout")
+layout.SortOrder = Enum.SortOrder.LayoutOrder
+layout.Padding = UDim.new(0, 5)
+layout.Parent = mapScroller
+
+-- 🔄 ปรับสีปุ่มตามสถานะ
+function updateButtons()
+    normalBtn.BackgroundColor3 = (targetType == "Normal") and Color3.fromRGB(100, 150, 100) or Color3.fromRGB(70, 70, 70)
+    bossBtn.BackgroundColor3 = (targetType == "Boss") and Color3.fromRGB(100, 150, 100) or Color3.fromRGB(70, 70, 70)
+    allBtn.BackgroundColor3 = (targetType == "All") and Color3.fromRGB(100, 150, 100) or Color3.fromRGB(70, 70, 70)
+    lowHpBtn.BackgroundColor3 = (targetPriority == "Lowest") and Color3.fromRGB(200, 100, 100) or Color3.fromRGB(70, 70, 70)
+    highHpBtn.BackgroundColor3 = (targetPriority == "Highest") and Color3.fromRGB(200, 150, 50) or Color3.fromRGB(70, 70, 70)
+end
+
+-- 🔄 LOAD CONFIG
+local function loadConfig()
+    if isfile and isfile(configFileName) then
+        local json = readfile(configFileName)
+        local data = HttpService:JSONDecode(json)
+        if data then
+            selectedMap = data.selectedMap or selectedMap
+            targetType = data.targetType or targetType
+            targetPriority = data.targetPriority or targetPriority
+            autofarmEnabled = data.autofarmEnabled or false
+            autoBossHopEnabled = data.autoBossHopEnabled or false
+            autofarmToggle.Text = "เริ่ม Auto Farm: " .. (autofarmEnabled and "ON" or "OFF")
+            bossHopToggle.Text = "🎯 AutoHop Boss: " .. (autoBossHopEnabled and "ON" or "OFF")
+        end
+    end
+end
+
+-- 💾 SAVE CLICK
 saveBtn.MouseButton1Click:Connect(function()
     if selectedMap then
         saveConfig()
@@ -113,46 +203,7 @@ saveBtn.MouseButton1Click:Connect(function()
     end
 end)
 
-
-local mapScroller = Instance.new("ScrollingFrame")
-mapScroller.Size = UDim2.new(1, -20, 0, 230)
-mapScroller.Position = UDim2.new(0, 10, 0, 290)
-mapScroller.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-mapScroller.ScrollBarThickness = 6
-mapScroller.AutomaticCanvasSize = Enum.AutomaticSize.Y
-mapScroller.CanvasSize = UDim2.new(0, 0, 0, 0)
-mapScroller.Parent = frame
-
-local layout = Instance.new("UIListLayout")
-layout.SortOrder = Enum.SortOrder.LayoutOrder
-layout.Padding = UDim.new(0, 5)
-layout.Parent = mapScroller
-
-function updateButtons()
-    normalBtn.BackgroundColor3 = (targetType == "Normal") and Color3.fromRGB(100, 150, 100) or Color3.fromRGB(70, 70, 70)
-    bossBtn.BackgroundColor3 = (targetType == "Boss") and Color3.fromRGB(100, 150, 100) or Color3.fromRGB(70, 70, 70)
-    allBtn.BackgroundColor3 = (targetType == "All") and Color3.fromRGB(100, 150, 100) or Color3.fromRGB(70, 70, 70)
-    lowHpBtn.BackgroundColor3 = (targetPriority == "Lowest") and Color3.fromRGB(200, 100, 100) or Color3.fromRGB(70, 70, 70)
-    highHpBtn.BackgroundColor3 = (targetPriority == "Highest") and Color3.fromRGB(200, 150, 50) or Color3.fromRGB(70, 70, 70)
-end
-
-local function loadConfig()
-    if isfile and isfile(configFileName) then
-        local json = readfile(configFileName)
-        local data = HttpService:JSONDecode(json)
-        if data then
-            selectedMap = data.selectedMap or selectedMap
-            targetType = data.targetType or targetType
-            targetPriority = data.targetPriority or targetPriority
-            autofarmEnabled = data.autofarmEnabled or false
-            autoBossHopEnabled = data.autoBossHopEnabled or false
-            autofarmToggle.Text = "เริ่ม Auto Farm: " .. (autofarmEnabled and "ON" or "OFF")
-            bossHopToggle.Text = "🎯 AutoHop Boss: " .. (autoBossHopEnabled and "ON" or "OFF")
-        end
-    end
-end
-
-local loadBtn = createButton("📂 Load Config", UDim2.new(0.5, 5, 0, 210), UDim2.new(0.5, -15, 0, 30), frame)
+-- 📂 LOAD CLICK
 loadBtn.MouseButton1Click:Connect(function()
     loadConfig()
     updateButtons()
@@ -177,6 +228,20 @@ loadBtn.MouseButton1Click:Connect(function()
         statusLabel.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
     end)
 end)
+--// 🗺️ MAP BUTTONS
+for _, mapName in ipairs(maps) do
+    local mapButton = createButton(mapName, UDim2.new(0, 0, 0, 0), UDim2.new(1, 0, 0, 40), mapScroller)
+    mapButton.MouseButton1Click:Connect(function()
+        selectedMap = mapName
+        statusLabel.Text = "เลือกแมพ: " .. selectedMap
+        updateButtons()
+    end)
+end
+
+-- ✅ LOAD CONFIG หลังสร้าง UI
+loadConfig()
+updateButtons()
+statusLabel.Text = selectedMap and ("📂 โหลด Config: " .. selectedMap) or "สถานะ: รอเลือกแมพ"
 
 --// 📍 BUTTON LOGIC
 normalBtn.MouseButton1Click:Connect(function() targetType = "Normal"; updateButtons() end)
@@ -195,20 +260,11 @@ bossHopToggle.MouseButton1Click:Connect(function()
     bossHopToggle.Text = "🎯 AutoHop Boss: " .. (autoBossHopEnabled and "ON" or "OFF")
 end)
 
---// 🗺️ MAP BUTTONS
-for _, mapName in ipairs(maps) do
-    local mapButton = createButton(mapName, UDim2.new(0, 0, 0, 0), UDim2.new(1, 0, 0, 40), mapScroller)
-    mapButton.MouseButton1Click:Connect(function()
-        selectedMap = mapName
-        statusLabel.Text = "เลือกแมพ: " .. selectedMap
-        updateButtons()
-    end)
-end
+rankUpBtn.MouseButton1Click:Connect(function()
+    autoRankUpEnabled = not autoRankUpEnabled
+    rankUpBtn.Text = "🆙 Auto RankUp: " .. (autoRankUpEnabled and "ON" or "OFF")
+end)
 
--- ✅ LOAD CONFIG AFTER UI CREATED
-loadConfig()
-updateButtons()
-statusLabel.Text = selectedMap and ("📂 โหลด Config: " .. selectedMap) or "สถานะ: รอเลือกแมพ"
 --// 🔫 AUTO FARM LOOP
 task.spawn(function()
     while task.wait(0.05) do
@@ -233,6 +289,7 @@ task.spawn(function()
                     local targetList = (targetType == "Boss" and bosses)
                         or (targetType == "Normal" and normals)
                         or (#bosses > 0 and bosses or normals)
+
                     local targetMob, compare = nil, (targetPriority == "Highest") and -math.huge or math.huge
                     for _, mob in ipairs(targetList) do
                         local hp = mob:GetAttribute("HP") or 0
@@ -242,12 +299,12 @@ task.spawn(function()
                             targetMob = mob
                         end
                     end
+
                     if targetMob and targetMob.Parent then
                         local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
                         if hrp then
                             while task.wait(0.02) do
-                                if not autofarmEnabled or not targetMob.Parent
-                                or (targetMob:GetAttribute("HP") or 0) <= 0 then break end
+                                if not autofarmEnabled or not targetMob.Parent or (targetMob:GetAttribute("HP") or 0) <= 0 then break end
                                 hrp.CFrame = targetMob.CFrame * CFrame.new(0, 3, 0)
                                 remote:FireServer({ "Grind", targetMob })
                             end
@@ -273,9 +330,7 @@ task.spawn(function()
                         local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
                         if hrp then
                             while task.wait(0.02) do
-                                if not autoBossHopEnabled or not boss.Parent or (boss:GetAttribute("HP") or 0) <= 0 then
-                                    break
-                                end
+                                if not autoBossHopEnabled or not boss.Parent or (boss:GetAttribute("HP") or 0) <= 0 then break end
                                 hrp.CFrame = boss.CFrame * CFrame.new(0, 3, 0)
                                 remote:FireServer({ "Grind", boss })
                             end
@@ -295,18 +350,8 @@ task.spawn(function()
         end
     end
 end)
---// 🆙 AUTO RANK UP TOGGLE
-local autoRankUpEnabled = false
 
-local rankUpBtn = createButton("🆙 Auto RankUp: OFF", UDim2.new(0, 10, 0, 250), UDim2.new(1, -20, 0, 30), frame)
-rankUpBtn.BackgroundColor3 = Color3.fromRGB(150, 100, 200)
-
-rankUpBtn.MouseButton1Click:Connect(function()
-    autoRankUpEnabled = not autoRankUpEnabled
-    rankUpBtn.Text = "🆙 Auto RankUp: " .. (autoRankUpEnabled and "ON" or "OFF")
-end)
-
---// 🔁 AUTO RANK UP LOOP
+--// 🆙 AUTO RANK UP LOOP
 task.spawn(function()
     while task.wait(5) do
         if autoRankUpEnabled then
