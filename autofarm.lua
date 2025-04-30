@@ -256,7 +256,7 @@ autofarmToggle.MouseButton1Click:Connect(function()
     autofarmToggle.Text = "เริ่ม Auto Farm: " .. (autofarmEnabled and "ON" or "OFF")
 end)
 
---// 🎯 AUTO HOP AFTER BOSS DEATH (ตรวจสอบการ Hop ไปเซิร์ฟเวอร์ใหม่)
+-- 🎯 AUTO HOP AFTER BOSS DEATH (ตรวจสอบการ Hop ไปเซิร์ฟเวอร์ใหม่)
 task.spawn(function()
     while task.wait(0.02) do  -- ทำงานทุกๆ 0.02 วินาที
         if autoBossHopEnabled then  -- ถ้า AutoHopBoss เปิด
